@@ -2,8 +2,11 @@
 from ast import NotIn
 import imp
 from string import punctuation
-from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render , HttpResponse , redirect
+from datetime import datetime
+from django.contrib import messages
+from django.contrib.auth.models import User , auth
+from django.contrib import messages
 
 '''def index(request):
     return HttpResponse('Hello </br> <a href="https://www.youtube.com/watch?v=Bp6YwNmJshc">AOT Clip</a>')'''
@@ -14,6 +17,25 @@ def about(request):
     
 def index(request):
     return render(request,"index.html")
+
+def logoutUser(request):
+    auth.logout(request)
+    return redirect("/")
+
+def loginUser(request):
+    if request.method=='POST':
+        username=request.POST['username']
+        password=request.POST['password']
+        user=auth.authenticate(username=username,password=password)
+        if user is not None:
+            auth.login(request,user)
+            messages.success(request,"Successfully logged in !!!")
+            return redirect("/")
+        else:
+            messages.info(request,"Invalid Credentials")
+            return redirect("login")
+    else:
+        return render(request,"login.html")
 
 def analyze(request):
     djtext=request.POST.get('text','default text')
@@ -84,3 +106,30 @@ def analyze(request):
         return HttpResponse("<h1>ERROR! Choose any one of the checkbox...!</h1>")
     
     return render(request,"analyze.html",params)
+
+def registerr(request):
+    if request.method=='POST':
+        first_name=request.POST['first_name']
+        last_name=request.POST['last_name']
+        username=request.POST['username']
+        email=request.POST['email']
+        password1=request.POST['password1']
+        password2=request.POST['password2']
+        
+        if password1==password2:
+            if User.objects.filter(username=username).exists():
+                messages.info(request,"Username is already taken...")
+            elif User.objects.filter(email=email).exists():
+                messages.info(request,"Email is already taken...")
+            else:
+                user=User.objects.create_user(first_name=first_name,last_name=last_name,email=email,username=username,password=password1)
+                user.save()
+                messages.success(request,"User created")
+                return redirect('login')
+        
+        else:
+            messages.info(request,"Password did not match")
+        return redirect('/')
+        
+    else:
+        return render(request,'register.html')
