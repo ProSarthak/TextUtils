@@ -129,7 +129,7 @@ def registerr(request):
         
         else:
             messages.info(request,"Password did not match")
-        return redirect('/')
+        return redirect('register')
         
     else:
         return render(request,'register.html')
